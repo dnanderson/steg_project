@@ -1,7 +1,10 @@
 import extractor
 import numpy as np
-from bitstring import ConstBitStream
-from bitstring import ReadError
+#from bitstring import ConstBitStream
+#from bitstring import ReadError
+
+import bitarray
+import bitarray.util
 import struct
 
 
@@ -21,18 +24,23 @@ class Embedder:
         self.em_masks = [0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80, 0x00]
 
     def embed(self, filename, outfile, message, bits=1):
+        ba2int = bitarray.util.ba2int
         length = struct.pack('!I', len(message))
-        bitstream = ConstBitStream(bytes=length+message)
+        barray = bitarray.bitarray(buffer=length+message)
         ex = extractor.Extractor()
         rgb = ex.load(filename)
         em_mask = self.em_masks[bits]
-        try:
+        if bits == 1:
+            with np.nditer(rgb, op_flags=['readwrite']) as it:
+                for x, msgb in zip(it, barray):
+                    x[...] =  (x & em_mask) | msgb
+        else:
+            pos = 0
             with np.nditer(rgb, op_flags=['readwrite']) as it:
                 for x in it:
-                    messagebit = bitstream.read(bits).uint
+                    messagebit = ba2int(barray[pos:pos+bits])
                     x[...] =  (x & em_mask) | messagebit
-        except ReadError: # No more message bits to embed
-            pass
+                    pos += bits
         ex.save(outfile, rgb)
 
 def main_files(inputfile, outputfile, messagefile, bits=1):

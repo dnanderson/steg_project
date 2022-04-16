@@ -43,9 +43,9 @@ class Revealer:
 
 def main_file(stegoimage, outputname, bits=1):
     re = Revealer()
-    hidden_bytes = re.reveal(stegoimage)
+    hidden_bytes = re.reveal(stegoimage, bits)
     with open(outputname, 'wb') as f:
-        f.write(hidden_bytes, bits)
+        f.write(hidden_bytes)
 
 def main_bytes(stegoimage, bits=1):
     re = Revealer()
