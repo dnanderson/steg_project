@@ -5,33 +5,6 @@ import numpy as np
 import os
 
 
-def bit_getter(message):
-    for byte in bytes(message):
-        for x in range(8):
-            yield (byte & 1) 
-            byte = byte >> 1
-
-
-
-class Embedder:
-
-    def __init__(self):
-        pass
-
-    def embed(self, rgbvals, message, wid, height):
-        import pdb; pdb.set_trace()
-        msggetter = bit_getter(message)
-        try:
-            for pixel in rgbvals:
-                print(pixel)
-        except StopIteration:
-            pass
-                
-            print(pixel[0])
-
-
-        
-
 class PNGExtractor:
     def __init__(self):
         pass
