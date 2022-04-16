@@ -2,6 +2,7 @@ import extractor
 import numpy as np
 from bitstring import ConstBitStream
 from bitstring import ReadError
+import struct
 
 
 class Embedder:
@@ -9,9 +10,9 @@ class Embedder:
     def __init__(self):
         pass
 
-    def embed(self, filename, message):
-        byt = bytes(message, 'ascii')
-        bitstream = ConstBitStream(bytes=byt)
+    def embed(self, filename, outfile, message):
+        length = struct.pack('!I', len(message))
+        bitstream = ConstBitStream(bytes=length+message)
         ex = extractor.Extractor()
         rgb = ex.load(filename)
         try:
@@ -21,12 +22,12 @@ class Embedder:
                     x[...] =  (x & 0xfe) | messagebit
         except ReadError:
             pass
-            
-        ex.save('outfile.png', rgb)
+        ex.save(outfile, rgb)
 
 
 if __name__ == '__main__':
     em = Embedder()
-    em.embed('qoi_test_images\kodim23.png', 'Hello!')
+    with open('qoi_test_images\\testcard.png', 'rb') as f:
+        em.embed('qoi_test_images\\kodim23.png', 'outfile.png', f.read())
 
 

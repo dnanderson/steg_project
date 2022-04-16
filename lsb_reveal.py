@@ -4,6 +4,7 @@ from bitstring import ConstBitStream
 from bitstring import ReadError
 from bitstring import BitArray
 from bitstring import Bits
+import struct
 
 
 class Revealer:
@@ -24,7 +25,12 @@ class Revealer:
         except ReadError:
             pass
         
-        asdf = bitarray.tobytes()
+        extracted_bytes = bitarray.tobytes()
+        import pdb; pdb.set_trace()
+        length = struct.unpack('!I', extracted_bytes[0:4])[0]
+        hidden_bytes = extracted_bytes[4:4+length]
+        with open('outmessage.png', 'wb') as f:
+            f.write(hidden_bytes)
             
 
 
