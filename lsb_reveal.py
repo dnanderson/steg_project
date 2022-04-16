@@ -1,9 +1,11 @@
 import extractor
 import numpy as np
-from bitstring import ConstBitStream
-from bitstring import ReadError
-from bitstring import BitArray
-from bitstring import Bits
+# from bitstring import ConstBitStream
+# from bitstring import ReadError
+# from bitstring import BitArray
+# from bitstring import Bits
+import bitarray
+import bitarray.util
 import struct
 
 
@@ -23,19 +25,17 @@ class Revealer:
         self.ex_masks = [0b0, 0b1, 0b11, 0b111, 0b1111, 0b11111, 0b111111, 0b1111111, 0xff]
 
     def reveal(self, filename, bits=1):
-        bitarray = BitArray()
+        barray = bitarray.bitarray()
         ex = extractor.Extractor()
         rgb = ex.load(filename)
         ex_mask = self.ex_masks[bits]
-        try:
-            with np.nditer(rgb) as it:
-                for x in it:
-                    xb = x & ex_mask
-                    bitarray.append(Bits(uint=xb, length=bits))
-        except ReadError:
-            pass
+        int2ba = bitarray.util.int2ba
+        with np.nditer(rgb) as it:
+            for x in it:
+                xb = int2ba(int(x & ex_mask), length=bits)
+                barray.extend(xb)
         
-        extracted_bytes = bitarray.tobytes()
+        extracted_bytes = barray.tobytes()
         length = struct.unpack('!I', extracted_bytes[0:4])[0]
         hidden_bytes = extracted_bytes[4:4+length]
         return hidden_bytes
@@ -61,6 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('outputfile', type=str, help='Set the name of the output file which will contain the hidden bytes')
     parser.add_argument('bits', type=int, nargs='?', default=1, help='Set the number of LSBs used for hiding')
     myargs = parser.parse_args()
-    main_file(myargs.stegoimage, myargs.outputfile)
+    main_file(myargs.stegoimage, myargs.outputfile, myargs.bits)
 
 

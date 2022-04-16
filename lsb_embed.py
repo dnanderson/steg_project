@@ -38,7 +38,9 @@ class Embedder:
             pos = 0
             with np.nditer(rgb, op_flags=['readwrite']) as it:
                 for x in it:
-                    messagebit = ba2int(barray[pos:pos+bits])
+                    ba = barray[pos:pos+bits]
+                    if len(ba) == 0: break
+                    messagebit = ba2int(ba)
                     x[...] =  (x & em_mask) | messagebit
                     pos += bits
         ex.save(outfile, rgb)
@@ -62,5 +64,6 @@ if __name__ == '__main__':
     parser.add_argument('bits', type=int, nargs='?', default=1, help='Set the number of LSBs used for hiding')
     myargs = parser.parse_args()
     main_files(myargs.coverimage, myargs.outputfile, myargs.messagefile, myargs.bits)
+    #main_bytes(myargs.coverimage, myargs.outputfile, b'Hello world!', myargs.bits)
 
 
