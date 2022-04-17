@@ -28,10 +28,13 @@ class Revealer:
         rgb = ex.load(filename)
         ex_mask = self.ex_masks[bits]
         int2ba = bitarray.util.int2ba
+        hasher = crypto_util.hasher(crypto_util.shared_key, 2)
         with np.nditer(rgb) as it:
             for x in it:
-                xb = int2ba(int(x & ex_mask), length=bits)
-                barray.extend(xb)
+                doext = next(hasher)
+                if doext == 2:
+                    xb = int2ba(int(x & ex_mask), length=bits)
+                    barray.extend(xb)
         
         extracted_bytes = barray.tobytes()
         nonce = extracted_bytes[:16]

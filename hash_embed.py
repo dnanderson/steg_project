@@ -27,6 +27,7 @@ class Embedder:
     def embed(self, filename, outfile, message, bits=1):
         nonce = os.urandom(16)
         encr = encryptor(crypto_util.shared_key, nonce)
+        hasher = crypto_util.hasher(crypto_util.shared_key, 2)
         ba2int = bitarray.util.ba2int
         length = struct.pack('!I', len(message))
         enc_data = nonce+encr(length+message)
@@ -35,9 +36,17 @@ class Embedder:
         rgb = ex.load(filename)
         em_mask = self.em_masks[bits]
         if bits == 1:
-            with np.nditer(rgb, op_flags=['readwrite']) as it:
-                for x, msgb in zip(it, barray):
-                    x[...] =  (x & em_mask) | msgb
+            try:
+                pos = 0
+                with np.nditer(rgb, op_flags=['readwrite']) as it:
+                    for x in it:
+                        doembed = next(hasher) # Infinite generator
+                        if doembed == 2: # An arbit
+                            msgb = barray[pos]
+                            pos += 1
+                            x[...] =  (x & em_mask) | msgb
+            except IndexError:
+                pass
         else:
             pos = 0
             with np.nditer(rgb, op_flags=['readwrite']) as it:
