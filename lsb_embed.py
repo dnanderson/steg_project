@@ -30,10 +30,19 @@ class Embedder:
         ex = extractor.Extractor()
         rgb = ex.load(filename)
         em_mask = self.em_masks[bits]
+        pos = 0
         if bits == 1:
-            with np.nditer(rgb, op_flags=['readwrite']) as it:
-                for x, msgb in zip(it, barray):
-                    x[...] =  (x & em_mask) | msgb
+            try:
+                with np.nditer(rgb, op_flags=['readwrite']) as it:
+                    for x in it:
+                        msgb = barray[pos]
+                        x[...] =  (x & em_mask) | msgb
+                        pos += 1
+                ex.save(outfile, rgb)
+                return pos
+            except IndexError:
+                ex.save(outfile, rgb)
+                return None
         else:
             pos = 0
             with np.nditer(rgb, op_flags=['readwrite']) as it:
@@ -43,7 +52,9 @@ class Embedder:
                     messagebit = ba2int(ba)
                     x[...] =  (x & em_mask) | messagebit
                     pos += bits
+
         ex.save(outfile, rgb)
+        return None
 
 def main_files(inputfile, outputfile, messagefile, bits=1):
     em = Embedder()
@@ -52,7 +63,7 @@ def main_files(inputfile, outputfile, messagefile, bits=1):
 
 def main_bytes(inputfile, outputfile, message, bits=1):
     em = Embedder()
-    em.embed(inputfile, outputfile, message, bits)
+    return em.embed(inputfile, outputfile, message, bits)
 
 
 if __name__ == '__main__':

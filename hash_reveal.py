@@ -22,18 +22,25 @@ class Revealer:
         # Don't use the zero entry here
         self.ex_masks = [0b0, 0b1, 0b11, 0b111, 0b1111, 0b11111, 0b111111, 0b1111111, 0xff]
 
-    def reveal(self, filename, bits=1):
+    def reveal(self, filename, rate=3):
         barray = bitarray.bitarray()
         ex = extractor.Extractor()
         rgb = ex.load(filename)
         ex_mask = self.ex_masks[bits]
         int2ba = bitarray.util.int2ba
-        hasher = crypto_util.hasher(crypto_util.shared_key, 2)
-        with np.nditer(rgb) as it:
-            for x in it:
-                doext = next(hasher)
-                if doext == 2:
-                    xb = int2ba(int(x & ex_mask), length=bits)
+        hasher = crypto_util.hasher(crypto_util.shared_key, rate)
+        for i,row in enumerate(rgb):
+            for j,col in enumerate(row):
+                r,g,b = col[0],col[1],col[2]
+                doembed = next(hasher) # Infinite generator
+                if doembed == 1:
+                    xb = int2ba(int(r & ex_mask), length=1)
+                    barray.extend(xb)
+                elif doembed == 2:
+                    xb = int2ba(int(g & ex_mask), length=1)
+                    barray.extend(xb)
+                elif doembed == 3:
+                    xb = int2ba(int(b & ex_mask), length=1)
                     barray.extend(xb)
         
         extracted_bytes = barray.tobytes()

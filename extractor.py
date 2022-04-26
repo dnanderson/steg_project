@@ -11,6 +11,7 @@ class PNGExtractor:
     
     def load(self, filename):
         self.im = Image.open(filename)
+        self.mode = self.im.mode
         self.wid, self.height = self.im.size
         mybytes = self.im.tobytes()
         # These convert from bytes to a PNG image
@@ -22,7 +23,7 @@ class PNGExtractor:
     
     def save(self, filename, rgb):
         height, wid, _ = rgb.shape
-        img = Image.frombytes('RGB', (wid, height), rgb.tobytes())
+        img = Image.frombytes(self.mode, (wid, height), rgb.tobytes())
         img.save(filename, 'PNG')
         
 
@@ -60,6 +61,5 @@ class Extractor:
 
 if __name__ == '__main__':
     ex = Extractor()
-    rgb = ex.load('qoi_test_images\wikipedia_009.qoi')
-    ex.save('qoi_test_images\wikipedia_009.png', rgb)
+    rgb = ex.load('leena.png')
         

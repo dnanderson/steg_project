@@ -24,48 +24,52 @@ class Embedder:
         # Don't use the zero entry
         self.em_masks = [0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80, 0x00]
 
-    def embed(self, filename, outfile, message, bits=1):
+    def embed(self, filename, outfile, message, rate=3):
         nonce = os.urandom(16)
         encr = encryptor(crypto_util.shared_key, nonce)
-        hasher = crypto_util.hasher(crypto_util.shared_key, 2)
+        hasher = crypto_util.hasher(crypto_util.shared_key, rate)
         ba2int = bitarray.util.ba2int
         length = struct.pack('!I', len(message))
         enc_data = nonce+encr(length+message)
         barray = bitarray.bitarray(buffer=enc_data)
         ex = extractor.Extractor()
         rgb = ex.load(filename)
-        em_mask = self.em_masks[bits]
-        if bits == 1:
-            try:
-                pos = 0
-                with np.nditer(rgb, op_flags=['readwrite']) as it:
-                    for x in it:
-                        doembed = next(hasher) # Infinite generator
-                        if doembed == 2: # An arbit
-                            msgb = barray[pos]
-                            pos += 1
-                            x[...] =  (x & em_mask) | msgb
-            except IndexError:
-                pass
-        else:
+        em_mask = self.em_masks[1]
+        try:
             pos = 0
-            with np.nditer(rgb, op_flags=['readwrite']) as it:
-                for x in it:
-                    ba = barray[pos:pos+bits]
-                    if len(ba) == 0: break
-                    messagebit = ba2int(ba)
-                    x[...] =  (x & em_mask) | messagebit
-                    pos += bits
+            for i,row in enumerate(rgb):
+                for j,col in enumerate(row):
+                    r,g,b = col[0],col[1],col[2]
+                    doembed = next(hasher) # Infinite generator
+                    if doembed == 1:
+                        msgb = barray[pos]
+                        pos += 1
+                        rgb[i][j][0] = (r & em_mask) | msgb
+                    elif doembed == 2:
+                        msgb = barray[pos]
+                        pos += 1
+                        rgb[i][j][1] = (g & em_mask) | msgb
+                    elif doembed == 3:
+                        msgb = barray[pos]
+                        pos += 1
+                        rgb[i][j][2] = (b & em_mask) | msgb
+            else:
+                ex.save(outfile, rgb)
+                return pos
+        except IndexError:
+            pass
         ex.save(outfile, rgb)
+        return None
 
-def main_files(inputfile, outputfile, messagefile, bits=1):
+def main_files(inputfile, outputfile, messagefile, rate):
     em = Embedder()
     with open(messagefile, 'rb') as f:
-        em.embed(inputfile, outputfile, f.read(), bits)
+        em.embed(inputfile, outputfile, f.read(), rate)
 
-def main_bytes(inputfile, outputfile, message, bits=1):
+def main_bytes(inputfile, outputfile, message, rate):
     em = Embedder()
-    em.embed(inputfile, outputfile, message, bits)
+    return em.embed(inputfile, outputfile, message, rate)
+
 
 
 if __name__ == '__main__':
