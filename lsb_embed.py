@@ -2,6 +2,7 @@ import extractor
 import numpy as np
 #from bitstring import ConstBitStream
 #from bitstring import ReadError
+import os
 
 import bitarray
 import bitarray.util
@@ -64,6 +65,12 @@ def main_files(inputfile, outputfile, messagefile, bits=1):
 def main_bytes(inputfile, outputfile, message, bits=1):
     em = Embedder()
     return em.embed(inputfile, outputfile, message, bits)
+
+def test_func(data, rate=1):
+    em = Embedder()
+    inputfile = os.path.join('img', 'clean_lenna.png')
+    outputfile = os.path.join('img', 'steg_test_lenna.png') 
+    return em.embed(inputfile, outputfile, data, rate)
 
 
 if __name__ == '__main__':

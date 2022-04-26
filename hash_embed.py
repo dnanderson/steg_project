@@ -70,6 +70,13 @@ def main_bytes(inputfile, outputfile, message, rate):
     em = Embedder()
     return em.embed(inputfile, outputfile, message, rate)
 
+def test_func(data, rate=3):
+    em = Embedder()
+    inputfile = os.path.join('img', 'clean_lenna.png')
+    outputfile = os.path.join('img', 'steg_test_lenna.png') 
+    return em.embed(inputfile, outputfile, data, rate)
+
+
 
 
 if __name__ == '__main__':

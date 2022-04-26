@@ -15,7 +15,6 @@ data that is gathered as the information is embedded into each file.
 """
 longtext = [lorem.text() for x in range(1000)]
 longtext = ''.join(longtext)
-print(len(longtext))
 this_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -45,40 +44,40 @@ def run_detect():
     os.chdir(this_path)
 
 
+if __name__ == '__main__':
+    r_lsb = run_embed(lsb_embed.main_bytes, 'lsb')
+    em = partial(hash_embed.main_bytes, rate=2)
+    r_hash2 = run_embed(em, 'hash2')
+    em = partial(hash_embed.main_bytes, rate=3)
+    r_hash3 = run_embed(em, 'hash3')
+    em = partial(hash_embed.main_bytes, rate=4)
+    r_hash4 = run_embed(em, 'hash4')
+    r_lsb.update(r_hash2)
+    r_lsb.update(r_hash3)
+    r_lsb.update(r_hash4)
+    run_detect()
 
-r_lsb = run_embed(lsb_embed.main_bytes, 'lsb')
-em = partial(hash_embed.main_bytes, rate=2)
-r_hash2 = run_embed(em, 'hash2')
-em = partial(hash_embed.main_bytes, rate=3)
-r_hash3 = run_embed(em, 'hash3')
-em = partial(hash_embed.main_bytes, rate=4)
-r_hash4 = run_embed(em, 'hash4')
-r_lsb.update(r_hash2)
-r_lsb.update(r_hash3)
-r_lsb.update(r_hash4)
-run_detect()
+    # Read in the CSV, add in the embedding rates of each of the images
+    csvrows = []
+    with open('data.csv', newline='') as csvfile:
+        csvread = csv.reader(csvfile)
+        for row in csvread:
+            if not row:
+                continue
+            csvrows.append(row)
 
-# Read in the CSV, add in the embedding rates of each of the images
-csvrows = []
-with open('data.csv', newline='') as csvfile:
-    csvread = csv.reader(csvfile)
-    for row in csvread:
-        if not row:
-            continue
-        csvrows.append(row)
+    import pdb; pdb.set_trace()
+    for row in csvrows[1:]:
+        embedded = r_lsb.get(row[0], 0)
+        if embedded != 0:
+            embedded = embedded //  8
+        row.insert(3, embedded)
 
-import pdb; pdb.set_trace()
-for row in csvrows[1:]:
-    embedded = r_lsb.get(row[0], 0)
-    if embedded != 0:
-        embedded = embedded //  8
-    row.insert(3, embedded)
-
-csvrows[0].insert(3, 'Actual Bytes Embedded')
-with open('added_data.csv', 'w', newline='') as csvfile:
-    csvwrite = csv.writer(csvfile)
-    for row in csvrows:
-        csvwrite.writerow(row)
+    csvrows[0].insert(3, 'Actual Bytes Embedded')
+    with open('added_data.csv', 'w', newline='') as csvfile:
+        csvwrite = csv.writer(csvfile)
+        for row in csvrows:
+            csvwrite.writerow(row)
 
 
 
