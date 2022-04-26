@@ -66,7 +66,6 @@ if __name__ == '__main__':
                 continue
             csvrows.append(row)
 
-    import pdb; pdb.set_trace()
     for row in csvrows[1:]:
         embedded = r_lsb.get(row[0], 0)
         if embedded != 0:
